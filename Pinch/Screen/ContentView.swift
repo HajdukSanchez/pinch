@@ -14,7 +14,10 @@ struct ContentView: View {
     @State private var isAnimating: Bool = false
     @State private var imageScale: CGFloat = 1.0
     @State private var imageOffset: CGSize = .zero
-    @State private var isDrawerOpen: Bool = true
+    @State private var isDrawerOpen: Bool = false
+    @State private var pageIndex: Int = 0
+    
+    let pages: [PageModel] = pagesData
     
     // MARK: - Functions
     func resetImageState() {
@@ -24,11 +27,17 @@ struct ContentView: View {
         }
     }
     
+    func toggleImageDrawer() {
+        withAnimation(.easeOut) {
+            isDrawerOpen.toggle()
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.clear
-                Image("magazine-front-cover")
+                Image(pages[pageIndex].imageName)
                     .resizable()
                     .scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -132,7 +141,7 @@ struct ContentView: View {
                 .padding(.bottom, 30)
             }
             .overlay(alignment: .topTrailing) {
-                HStack(spacing: 12) {
+                HStack(alignment: .center, spacing: 12) {
                     Image(systemName: isDrawerOpen ? "chevron.compact.right" : "chevron.compact.left")
                         .resizable()
                         .scaledToFit()
@@ -140,10 +149,25 @@ struct ContentView: View {
                         .padding(8)
                         .foregroundStyle(.secondary)
                         .onTapGesture {
-                            withAnimation(.easeOut) {
-                                isDrawerOpen.toggle()
-                            }
+                            toggleImageDrawer()
                         }
+                    ForEach(pages) { page in
+                        Image(page.thumbNailName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .shadow(radius: 4)
+                            .opacity(isDrawerOpen ? 1 : 0)
+                            .animation(.easeOut(duration: 0.5), value: isDrawerOpen)
+                            .onTapGesture {
+                                if page.id != pageIndex {
+                                    isAnimating = true
+                                    pageIndex = page.id
+                                    toggleImageDrawer()
+                                }
+                            }
+                    }
                     Spacer()
                 }
                 .padding(EdgeInsets(top: 16, leading: 8, bottom: 16, trailing: 8))
